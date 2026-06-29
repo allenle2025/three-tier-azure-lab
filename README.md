@@ -8,9 +8,6 @@ A production-grade zero-trust network architecture demonstrating deny-by-default
 
 ## Architecture
 Internet → Public IP → vm-web (web tier) → vm-app (app tier) → vm-db (database tier)
-                          ↓                      ↓                    ↓
-                       nsg-web                nsg-app              nsg-db
-                    (allow SSH)            (allow app->db)      (allow db-only)
 
 **Three Subnets:**
 - `subnet-web` (10.0.1.0/24) — Internet-facing layer with public IP
