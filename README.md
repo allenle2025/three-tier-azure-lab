@@ -2,12 +2,13 @@
 
 ## Overview
 
-A production-grade zero-trust network architecture demonstrating deny-by-default NSG segmentation across three tiers (web, app, database). This lab reflects secure network patterns required by federal contractors and government agencies.
+A zero-trust network architecture demonstrating deny-by-default NSG segmentation across three tiers (web, app, database). This lab reflects secure network patterns required by federal contractors and government agencies.
 
 **Key Achievement:** Validated end-to-end SSH jumpbox chain with complete traffic isolation—public internet can reach only the web tier; backend tiers are entirely inaccessible from outside.
 
 ## Architecture
-Internet → Public IP → vm-web (web tier) → vm-app (app tier) → vm-db (database tier)
+
+![Three-Tier Network Diagram](./architecture-diagram.png)
 
 **Three Subnets:**
 - `subnet-web` (10.0.1.0/24) — Internet-facing layer with public IP
@@ -16,45 +17,44 @@ Internet → Public IP → vm-web (web tier) → vm-app (app tier) → vm-db (da
 
 ## Security Rules (Deny-by-Default)
 
+Each tier is governed by its own NSG with explicit allow rules and a deny-all fallback.
+
 ### nsg-web
-- ✅ Allow HTTP (80), HTTPS (443), SSH (22) from Internet
-- ✅ Allow outbound to app tier (port varies by app)
-- ❌ Deny all other inbound
-- ❌ Deny direct database access
+![nsg-web rules](./nsg-web-rules.png)
 
 ### nsg-app
-- ✅ Allow inbound from web tier only
-- ✅ Allow outbound to database tier (port 1433 for SQL, or custom)
-- ❌ Deny direct Internet access
-- ❌ Deny public ingress
+![nsg-app rules](./nsg-app-rules.png)
 
 ### nsg-db
-- ✅ Allow inbound from app tier only (port 1433 for SQL)
-- ✅ Allow outbound to VirtualNetwork for replication
-- ❌ Deny all direct inbound
-- ❌ Deny public access entirely
+![nsg-db rules](./nsg-db-rules.png)
 
 ## Validation & Testing
 
-All paths validated end-to-end:
+### Allowed Traffic
 
-**✅ Allowed Traffic:**
-- Internet → vm-web (SSH/HTTP/HTTPS)
-- vm-web → vm-app (private chain)
-- vm-app → vm-db (private chain)
+**Internet → vm-web**
+![SSH internet to web](./ssh-internet-to-web.png)
 
-**❌ Blocked Traffic (Negative Tests):**
-- Internet → vm-db (connection timeout)
-- vm-web → vm-db directly (connection timeout, must go through app tier)
+**vm-web → vm-app**
+![SSH web to app](./ssh-web-to-app.png)
 
-See [validation screenshots](./validation/) for SSH session proof.
+**vm-app → vm-db**
+![SSH app to db](./ssh-app-to-db.png)
+
+### Blocked Traffic (Negative Tests)
+
+**Internet → vm-db (Denied)**
+![Negative internet to db](./negative-internet-to-db.png)
+
+**vm-web → vm-db (Denied)**
+![Negative web to db](./negative-web-to-db.png)
 
 ## Resources Deployed
 
 - Virtual Network: `vnet-lab` (10.0.0.0/16)
-- 3x Ubuntu 24.04 LTS VMs (Ubuntu chosen for cloud-native alignment)
+- 3x Ubuntu 24.04 LTS VMs
 - 3x Network Security Groups (nsg-web, nsg-app, nsg-db)
-- 3x SSH Key Pairs (stored securely in user .ssh directory)
+- 3x SSH Key Pairs
 - 1x Public IP (attached to vm-web only)
 
 ## Next Steps
